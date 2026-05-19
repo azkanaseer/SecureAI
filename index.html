@@ -1,0 +1,3981 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SecureAI — AI Powered Code Security Reviewer</title>
+  <meta name="description" content="SecureAI is a premium AI-powered code security auditing system. Analyze vulnerabilities, receive recommendations, and secure your code immediately.">
+  
+  <!-- Font CDN: Bebas Neue, Inter, JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome & HighlightJS CDNs -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/atom-one-dark.min.css" id="hljs-theme-link">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+  
+  <style>
+    /* ==========================================
+       1. CSS DESIGN SYSTEM & TOKENS
+       ========================================== */
+    :root {
+      --bg: #030303;
+      --surface: #0f0f0f;
+      --surface-2: #1a1a1a;
+      --primary: #00ff88;
+      --primary-rgb: 0, 255, 136;
+      --secondary: #ff4500;
+      --secondary-rgb: 255, 69, 0;
+      --danger: #ff2244;
+      --danger-rgb: 255, 34, 68;
+      --warning: #ffcc00;
+      --warning-rgb: 255, 204, 0;
+      --text-primary: #ffffff;
+      --text-secondary: #888888;
+      --border: rgba(255, 255, 255, 0.08);
+      --glow: rgba(0, 255, 136, 0.15);
+      --nav-bg: rgba(3, 3, 3, 0.7);
+      --loader-bg: rgba(3, 3, 3, 0.9);
+      
+      --font-display: 'Bebas Neue', sans-serif;
+      --font-body: 'Inter', sans-serif;
+      --font-code: 'JetBrains Mono', monospace;
+      
+      --transition-fast: 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+      --transition-normal: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      --transition-slow: 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+      
+      --cursor-size: 8px;
+      --cursor-ring-size: 40px;
+
+      /* Typography Design System Variables */
+      --text-heading: #ffffff;
+      --text-subheading: #eeeeee;
+      --text-body: #dddddd;
+      --text-muted: #888888;
+    }
+
+    [data-theme="light"] {
+      --bg: #fafafa;
+      --surface: #ffffff;
+      --surface-2: #f0f0f0;
+      --primary: #00cc66;
+      --primary-rgb: 0, 204, 102;
+      --secondary: #ff4500;
+      --secondary-rgb: 255, 69, 0;
+      --danger: #dd0033;
+      --danger-rgb: 221, 0, 51;
+      --warning: #ff9900;
+      --warning-rgb: 255, 153, 0;
+      --text-primary: #0a0a0a;
+      --text-secondary: #555555;
+      --border: rgba(0, 0, 0, 0.08);
+      --glow: rgba(0, 204, 102, 0.12);
+      --nav-bg: rgba(250, 250, 250, 0.7);
+      --loader-bg: rgba(250, 250, 250, 0.9);
+
+      /* Typography Design System Variables */
+      --text-heading: #0a0a0a;
+      --text-subheading: #222222;
+      --text-body: #444444;
+      --text-muted: #666666;
+    }
+
+    /* Reset & Global Styles */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      scrollbar-width: thin;
+      scrollbar-color: var(--primary) var(--surface-2);
+    }
+
+    /* Scrollbars */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 4px;
+      transition: background 0.3s;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--primary);
+    }
+
+    html {
+      scroll-behavior: smooth;
+      background-color: var(--bg);
+      color: var(--text-body);
+      font-family: var(--font-body);
+      font-size: 16px;
+      overflow-x: hidden;
+    }
+
+    body {
+      overflow-x: hidden;
+      position: relative;
+      background-color: var(--bg);
+      color: var(--text-body);
+      transition: background-color var(--transition-normal), color var(--transition-normal);
+      cursor: none; /* Hide default cursor on desktop */
+    }
+    
+    @media (max-width: 1024px) {
+      body {
+        cursor: auto; /* Fallback default cursor on touch devices */
+      }
+    }
+
+    /* Typography Utilities */
+    h1, h2, h3, h4, h5, h6 {
+      font-family: var(--font-display);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      line-height: 0.95;
+      color: var(--text-heading);
+    }
+
+    p {
+      line-height: 1.6;
+      color: var(--text-body);
+      font-weight: 300;
+      font-size: 1rem;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+      transition: var(--transition-fast);
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 4rem;
+      position: relative;
+      z-index: 2;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 0 1.5rem;
+      }
+    }
+
+    /* Glow Effects */
+    .glow-text {
+      text-shadow: 0 0 10px rgba(var(--primary-rgb), 0.3);
+    }
+    .glow-box {
+      box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5), 0 0 20px rgba(var(--primary-rgb), 0.1);
+    }
+
+    /* ==========================================
+       2. REUSABLE PREMIUM UI COMPONENTS
+       ========================================== */
+    
+    /* Custom Magnetic Cursor */
+    .magnetic-cursor {
+      width: var(--cursor-size);
+      height: var(--cursor-size);
+      background: var(--primary);
+      border-radius: 50%;
+      position: fixed;
+      pointer-events: none;
+      z-index: 10000;
+      transform: translate(-50%, -50%);
+      transition: width var(--transition-fast), height var(--transition-fast), background var(--transition-fast);
+    }
+
+    .magnetic-cursor-ring {
+      width: var(--cursor-ring-size);
+      height: var(--cursor-ring-size);
+      border: 1px solid var(--primary);
+      border-radius: 50%;
+      position: fixed;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+      transition: width 0.15s ease-out, height 0.15s ease-out, border-color var(--transition-fast);
+    }
+
+    /* Expanded Cursor Hover States */
+    .cursor-hover-active .magnetic-cursor {
+      width: 4px;
+      height: 4px;
+      background: var(--secondary);
+    }
+    .cursor-hover-active .magnetic-cursor-ring {
+      width: 60px;
+      height: 60px;
+      border-color: var(--secondary);
+      background: rgba(var(--secondary-rgb), 0.05);
+    }
+    
+    .cursor-hover-input .magnetic-cursor {
+      width: 2px;
+      height: 20px;
+      border-radius: 0;
+      background: var(--primary);
+    }
+    .cursor-hover-input .magnetic-cursor-ring {
+      width: 0;
+      height: 0;
+      border-color: transparent;
+    }
+
+    /* Scroll Progress Bar */
+    .scroll-progress-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: transparent;
+      z-index: 1001;
+    }
+    .scroll-progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      transition: width 0.1s ease-out;
+    }
+
+    /* Liquid Hover Button */
+    .btn-liquid {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.2rem 2.8rem;
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      letter-spacing: 1px;
+      color: #000;
+      background: var(--primary);
+      border: none;
+      outline: none;
+      cursor: none;
+      overflow: hidden;
+      z-index: 1;
+      transition: color var(--transition-normal), transform var(--transition-fast);
+      box-shadow: 0 8px 30px rgba(var(--primary-rgb), 0.25);
+    }
+
+    .btn-liquid span {
+      position: relative;
+      z-index: 3;
+    }
+
+    .btn-liquid::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      width: 150%;
+      height: 150%;
+      background: var(--secondary);
+      border-radius: 40%;
+      transform: translate(-50%, -30%) rotate(0deg);
+      transition: top 0.6s cubic-bezier(0.19, 1, 0.22, 1), transform 6s linear;
+      z-index: 2;
+    }
+
+    .btn-liquid:hover {
+      color: #fff;
+      box-shadow: 0 8px 35px rgba(var(--secondary-rgb), 0.4);
+    }
+
+    .btn-liquid:hover::after {
+      top: -25%;
+      transform: translate(-50%, -30%) rotate(360deg);
+    }
+
+    .btn-ghost {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.2rem 2.8rem;
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      letter-spacing: 1px;
+      color: var(--text-primary);
+      background: transparent;
+      border: 1px solid var(--border);
+      cursor: none;
+      overflow: hidden;
+      z-index: 1;
+      transition: var(--transition-normal);
+    }
+
+    .btn-ghost::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 0%;
+      height: 100%;
+      background: rgba(var(--primary-rgb), 0.08);
+      z-index: -1;
+      transition: var(--transition-normal);
+    }
+
+    .btn-ghost:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+      box-shadow: 0 0 15px rgba(var(--primary-rgb), 0.1);
+    }
+
+    .btn-ghost:hover::before {
+      width: 100%;
+    }
+
+    /* Back to Top Button */
+    .back-to-top {
+      position: fixed;
+      bottom: 40px;
+      right: 40px;
+      width: 50px;
+      height: 50px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-primary);
+      cursor: none;
+      z-index: 100;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(20px);
+      transition: var(--transition-normal);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+
+    .back-to-top.visible {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .back-to-top:hover {
+      background: var(--primary);
+      color: #000;
+      border-color: var(--primary);
+      box-shadow: 0 0 20px rgba(var(--primary-rgb), 0.3);
+    }
+
+    /* ==========================================
+       3. ANCHORED SECTION STYLING & ANIMATIONS
+       ========================================== */
+
+    /* Scroll Animation Target */
+    .scroll-reveal {
+      opacity: 0;
+      transform: translateY(60px);
+      transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .scroll-reveal.revealed {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* 3D Tilt Card Base */
+    .tilt-card {
+      transform-style: preserve-3d;
+      transition: transform var(--transition-fast);
+      will-change: transform;
+    }
+
+    /* Moving Gradient Background Mesh */
+    .bg-mesh-gradient {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .bg-mesh-glow {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.12;
+      transition: background-color var(--transition-normal);
+    }
+
+    .bg-mesh-glow-1 {
+      top: -10%;
+      left: 10%;
+      width: 50vw;
+      height: 50vw;
+      background: radial-gradient(circle, var(--primary) 0%, transparent 70%);
+      animation: floatGlow1 20s infinite alternate;
+    }
+
+    .bg-mesh-glow-2 {
+      bottom: -10%;
+      right: 5%;
+      width: 40vw;
+      height: 40vw;
+      background: radial-gradient(circle, var(--secondary) 0%, transparent 70%);
+      animation: floatGlow2 15s infinite alternate;
+    }
+
+    @keyframes floatGlow1 {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(10vw, 5vh) scale(1.2); }
+    }
+    @keyframes floatGlow2 {
+      0% { transform: translate(0, 0) scale(1.1); }
+      100% { transform: translate(-8vw, -8vh) scale(0.9); }
+    }
+
+    /* Custom HighlightJS Override for Mode compatibility */
+    .hljs-theme-custom {
+      background: transparent !important;
+      padding: 0 !important;
+    }
+    
+    .editor-body pre code {
+      font-family: var(--font-code) !important;
+    }
+
+    /* ==========================================
+       4. NAVBAR STYLING
+       ========================================== */
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 90px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 4rem;
+      background: var(--nav-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      z-index: 1000;
+      transition: transform var(--transition-normal), background-color var(--transition-normal), border var(--transition-normal);
+    }
+
+    .navbar.nav-hidden {
+      transform: translateY(-100%);
+    }
+
+    .navbar-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      font-family: var(--font-display);
+      font-size: 2.2rem;
+      letter-spacing: 1px;
+      color: var(--text-primary);
+      cursor: none;
+    }
+
+    .navbar-logo i {
+      color: var(--primary);
+      font-size: 1.8rem;
+      filter: drop-shadow(0 0 5px rgba(var(--primary-rgb), 0.4));
+    }
+
+    .navbar-menu {
+      display: flex;
+      gap: 3rem;
+      align-items: center;
+    }
+
+    .navbar-menu a {
+      font-family: var(--font-display);
+      font-size: 1.2rem;
+      letter-spacing: 1px;
+      color: var(--text-secondary);
+      position: relative;
+      padding: 0.5rem 0;
+      cursor: none;
+    }
+
+    .navbar-menu a::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 0%;
+      height: 2px;
+      background: var(--primary);
+      transition: var(--transition-fast);
+    }
+
+    .navbar-menu a:hover {
+      color: var(--text-primary);
+    }
+
+    .navbar-menu a:hover::after {
+      width: 100%;
+    }
+
+    .navbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    .theme-toggle-btn {
+      background: none;
+      border: none;
+      color: var(--text-primary);
+      font-size: 1.3rem;
+      cursor: none;
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.3s;
+      border: 1px solid var(--border);
+    }
+
+    .theme-toggle-btn:hover {
+      background: var(--surface-2);
+      border-color: var(--primary);
+    }
+
+    /* Mobile Hamburger Menu */
+    .nav-toggle-btn {
+      display: none;
+      background: none;
+      border: none;
+      color: var(--text-primary);
+      font-size: 1.8rem;
+      cursor: none;
+    }
+
+    @media (max-width: 992px) {
+      .navbar {
+        padding: 0 2rem;
+        height: 80px;
+      }
+      .navbar-menu {
+        display: none; /* Managed by mobile drawer later if needed or simple stack */
+      }
+      .nav-toggle-btn {
+        display: block;
+      }
+    }
+
+    /* ==========================================
+       5. HERO SECTION STYLING
+       ========================================== */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      position: relative;
+      padding-top: 120px;
+      overflow: hidden;
+    }
+
+    #hero-particles {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      max-width: 900px;
+    }
+
+    .hero-title {
+      font-size: clamp(4rem, 10vw, 8rem);
+      font-weight: 900;
+      line-height: 0.85;
+      margin-bottom: 2rem;
+    }
+
+    .hero-title-outline {
+      display: block;
+      color: transparent;
+      -webkit-text-stroke: 1.5px var(--text-primary);
+      opacity: 0.9;
+    }
+
+    .hero-title-filled {
+      display: block;
+      color: var(--primary);
+      position: relative;
+    }
+
+    .hero-sub {
+      font-size: clamp(1rem, 2vw, 1.4rem);
+      font-weight: 300;
+      color: var(--text-secondary);
+      max-width: 600px;
+      margin-bottom: 3.5rem;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeInUp 1s 1.2s forwards cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 1.5rem;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeInUp 1s 1.4s forwards cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes fadeInUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Infinite Scrolling Marquee */
+    .hero-marquee {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      overflow: hidden;
+      background: var(--surface-2);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 1.2rem 0;
+      z-index: 2;
+    }
+
+    .marquee-inner {
+      display: flex;
+      white-space: nowrap;
+      width: max-content;
+      animation: marquee 20s linear infinite;
+    }
+
+    .marquee-inner span {
+      font-family: var(--font-display);
+      font-size: 1.8rem;
+      letter-spacing: 2px;
+      color: var(--text-primary);
+      margin-right: 4rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .marquee-inner span i {
+      color: var(--primary);
+      font-size: 1.2rem;
+    }
+
+    @keyframes marquee {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    /* ==========================================
+       6. STATS BAR SECTION STYLING
+       ========================================== */
+    .stats-bar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 4rem 0;
+      position: relative;
+      z-index: 2;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2rem;
+      align-items: center;
+    }
+
+    .stat-card {
+      text-align: center;
+      position: relative;
+    }
+
+    .stat-card:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      top: 15%;
+      right: 0;
+      width: 1px;
+      height: 70%;
+      background: var(--border);
+    }
+
+    .stat-number {
+      font-family: var(--font-display);
+      font-size: clamp(3rem, 6vw, 4.5rem);
+      color: var(--primary);
+      line-height: 1;
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--text-subheading);
+    }
+
+    @media (max-width: 992px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 3rem;
+      }
+      .stat-card:nth-child(2)::after {
+        display: none;
+      }
+    }
+    
+    @media (max-width: 576px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+      .stat-card::after {
+        display: none !important;
+      }
+    }
+
+    /* ==========================================
+       7. MAIN REVIEW TOOL SECTION STYLING
+       ========================================== */
+    .review-tool-section {
+      padding: 10rem 0;
+      position: relative;
+    }
+
+    .section-title-wrap {
+      margin-bottom: 4rem;
+    }
+
+    .section-label {
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--secondary);
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+      display: inline-block;
+    }
+
+    .section-title {
+      font-size: clamp(3rem, 6vw, 5rem);
+      margin-bottom: 1rem;
+    }
+
+    .tool-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 3.5rem;
+      align-items: start;
+    }
+
+    @media (max-width: 1024px) {
+      .tool-grid {
+        grid-template-columns: 1fr;
+        gap: 4rem;
+      }
+    }
+
+    /* Custom Input Editor */
+    .editor-wrapper {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.4);
+    }
+
+    .editor-header {
+      background: var(--surface-2);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .editor-actions {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+    }
+
+    .dots-container {
+      display: flex;
+      gap: 6px;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .dot-red { background: #ff5f56; }
+    .dot-yellow { background: #ffbd2e; }
+    .dot-green { background: #27c93f; }
+
+    .lang-dropdown-wrapper {
+      position: relative;
+    }
+
+    .lang-select {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-primary);
+      padding: 0.5rem 2.5rem 0.5rem 1rem;
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+      font-weight: 600;
+      appearance: none;
+      cursor: none;
+      outline: none;
+      transition: var(--transition-fast);
+    }
+
+    .lang-select:hover, .lang-select:focus {
+      border-color: var(--primary);
+    }
+
+    .lang-dropdown-wrapper::after {
+      content: '\f078';
+      font-family: 'Font Awesome 6 Free';
+      font-weight: 900;
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+      pointer-events: none;
+    }
+
+    .editor-body {
+      display: flex;
+      height: 480px;
+      position: relative;
+    }
+
+    .line-numbers-container {
+      width: 50px;
+      background: var(--surface-2);
+      border-right: 1px solid var(--border);
+      padding: 1.5rem 0;
+      text-align: right;
+      color: var(--text-secondary);
+      font-family: var(--font-code);
+      font-size: 0.9rem;
+      line-height: 1.5;
+      user-select: none;
+      overflow-y: hidden;
+    }
+
+    .line-numbers-container div {
+      padding-right: 12px;
+    }
+
+    .editor-area-container {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      background: var(--surface);
+    }
+
+    .code-textarea {
+      width: 100%;
+      height: 100%;
+      background: transparent;
+      border: none;
+      resize: none;
+      color: transparent;
+      caret-color: var(--primary);
+      font-family: var(--font-code);
+      font-size: 0.9rem;
+      line-height: 1.5;
+      padding: 1.5rem;
+      outline: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 2;
+      white-space: pre;
+      overflow: auto;
+    }
+
+    .highlight-overlay {
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+      overflow: hidden;
+      padding: 1.5rem;
+      margin: 0;
+    }
+
+    .highlight-overlay pre {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      white-space: pre;
+      overflow: hidden;
+    }
+
+    .highlight-overlay code {
+      font-family: var(--font-code);
+      font-size: 0.9rem;
+      line-height: 1.5;
+      background: transparent !important;
+      padding: 0 !important;
+      display: block;
+    }
+
+    .editor-footer {
+      padding: 1.5rem;
+      border-top: 1px solid var(--border);
+      background: var(--surface-2);
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .editor-footer-buttons {
+      display: flex;
+      gap: 1.5rem;
+    }
+
+    .editor-footer-buttons button {
+      flex: 1;
+    }
+
+    .btn-clear {
+      flex: 0.3 !important;
+    }
+
+    /* CUSTOM SYNTAX HIGHLIGHT COLOR OVERRIDES FOR BRAND INTEGRATION */
+    .hljs-keyword, .hljs-selector-tag { color: var(--secondary) !important; font-weight: bold; }
+    .hljs-string, .hljs-doctag { color: var(--primary) !important; }
+    .hljs-comment, .hljs-quote { color: var(--text-secondary) !important; font-style: italic; }
+    .hljs-number, .hljs-literal { color: var(--warning) !important; }
+    .hljs-title, .hljs-section, .hljs-function, .hljs-class-name { color: #00d2ff !important; }
+    .hljs-params, .hljs-variable { color: var(--text-primary) !important; }
+    .hljs-built_in { color: #d175ff !important; }
+
+    /* Results Dashboard Column */
+    .results-wrapper {
+      min-height: 600px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .results-empty-state {
+      width: 100%;
+      height: 100%;
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 4rem 2rem;
+      text-align: center;
+      transition: var(--transition-normal);
+    }
+
+    .results-empty-state h3 {
+      color: var(--text-secondary) !important;
+    }
+
+    .results-empty-icon {
+      font-size: 3rem;
+      color: var(--text-secondary);
+      margin-bottom: 1.5rem;
+      animation: pulseGlow 3s infinite alternate;
+    }
+
+    @keyframes pulseGlow {
+      0% { text-shadow: 0 0 10px transparent; transform: scale(1); }
+      100% { text-shadow: 0 0 20px rgba(var(--primary-rgb), 0.2); transform: scale(1.05); color: var(--primary); }
+    }
+
+    /* Active Results Dashboard */
+    .results-active {
+      width: 100%;
+      display: none;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    .results-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+      opacity: 0;
+      transform: translateX(30px);
+      transition: opacity 0.5s, transform 0.5s;
+    }
+
+    .results-card.reveal-active {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    /* Circle Score Meter */
+    .score-summary-grid {
+      display: grid;
+      grid-template-columns: 150px 1fr;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    @media (max-width: 576px) {
+      .score-summary-grid {
+        grid-template-columns: 1fr;
+        justify-items: center;
+        text-align: center;
+      }
+    }
+
+    .score-radial-wrap {
+      position: relative;
+      width: 130px;
+      height: 130px;
+    }
+
+    .score-radial-svg {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+
+    .score-radial-bg {
+      fill: none;
+      stroke: var(--surface-2);
+      stroke-width: 10;
+    }
+
+    .score-radial-fill {
+      fill: none;
+      stroke: var(--primary);
+      stroke-width: 10;
+      stroke-linecap: round;
+      stroke-dasharray: 377; /* Circumference for r=60 */
+      stroke-dashoffset: 377;
+      transition: stroke-dashoffset 1.5s cubic-bezier(0.16, 1, 0.3, 1), stroke 0.5s;
+    }
+
+    .score-value {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: var(--font-display);
+      font-size: 2.8rem;
+      color: var(--text-primary);
+    }
+
+    .score-details {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .risk-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 1rem;
+      border-radius: 50px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      width: max-content;
+      box-shadow: 0 0 15px currentColor;
+    }
+    
+    .risk-badge.critical { background: rgba(255, 34, 68, 0.15); color: var(--danger); }
+    .risk-badge.high { background: rgba(255, 69, 0, 0.15); color: var(--secondary); }
+    .risk-badge.medium { background: rgba(255, 204, 0, 0.15); color: var(--warning); }
+    .risk-badge.low { background: rgba(0, 255, 136, 0.15); color: var(--primary); }
+
+    .score-title {
+      font-size: 1.8rem;
+      font-family: var(--font-display);
+      letter-spacing: 1px;
+    }
+
+    .summary-text {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    /* List items for vulns & fixes */
+    .audit-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+      margin-top: 1.5rem;
+    }
+
+    .audit-item {
+      display: flex;
+      gap: 1.2rem;
+      padding: 1.2rem;
+      background: var(--surface-2);
+      border-radius: 8px;
+      border-left: 4px solid var(--danger);
+      transition: var(--transition-fast);
+      transform: translateY(20px);
+      opacity: 0;
+    }
+
+    .audit-item.active {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .audit-item:hover {
+      background: rgba(255,255,255,0.02);
+    }
+
+    .audit-item.fix-item {
+      border-left-color: var(--primary);
+    }
+
+    .audit-icon {
+      font-size: 1.2rem;
+      color: var(--danger);
+      margin-top: 0.2rem;
+    }
+
+    .fix-item .audit-icon {
+      color: var(--primary);
+    }
+
+    .audit-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .audit-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .audit-type {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .audit-line {
+      font-family: var(--font-code);
+      font-size: 0.75rem;
+      padding: 0.15rem 0.5rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text-muted);
+    }
+
+    .audit-desc {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .results-actions-card {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .results-actions-card button {
+      flex: 1;
+    }
+
+    @media (max-width: 576px) {
+      .results-actions-card {
+        flex-direction: column;
+      }
+    }
+
+    /* API Loading Loader overlay */
+    .loader-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--loader-bg);
+      backdrop-filter: blur(5px);
+      border-radius: 12px;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      gap: 1.5rem;
+    }
+
+    .spinner-wrap {
+      position: relative;
+      width: 80px;
+      height: 80px;
+    }
+
+    .spinner-circle {
+      width: 100%;
+      height: 100%;
+      border: 3px solid transparent;
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    .spinner-core {
+      position: absolute;
+      top: 15%;
+      left: 15%;
+      width: 70%;
+      height: 70%;
+      border: 3px solid transparent;
+      border-bottom-color: var(--secondary);
+      border-radius: 50%;
+      animation: spin 1.5s linear infinite reverse;
+    }
+
+    .loader-text {
+      font-family: var(--font-display);
+      font-size: 1.8rem;
+      letter-spacing: 2px;
+      color: var(--text-primary);
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ==========================================
+       8. HOW IT WORKS SECTION STYLING
+       ========================================== */
+    .how-it-works-section {
+      padding: 10rem 0;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+
+    .steps-container {
+      position: relative;
+      margin-top: 6rem;
+    }
+
+    .steps-connector-svg {
+      position: absolute;
+      top: 50px;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .steps-connector-bg {
+      stroke: var(--border);
+      stroke-width: 2;
+    }
+
+    .steps-connector-fill {
+      stroke: var(--primary);
+      stroke-width: 2;
+      stroke-dasharray: 1000;
+      stroke-dashoffset: 1000;
+      transition: stroke-dashoffset 0.1s ease-out;
+    }
+
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2rem;
+      position: relative;
+      z-index: 2;
+    }
+
+    .step-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 3rem 2rem;
+      text-align: center;
+      transition: var(--transition-normal);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .step-card:hover {
+      border-color: var(--primary);
+      box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 15px rgba(var(--primary-rgb), 0.1);
+    }
+
+    .step-icon-circle {
+      width: 70px;
+      height: 70px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      color: var(--primary);
+      margin-bottom: 2rem;
+      transition: var(--transition-normal);
+    }
+
+    .step-card:hover .step-icon-circle {
+      background: var(--primary);
+      color: #000;
+      transform: scale(1.1);
+      box-shadow: 0 0 20px rgba(var(--primary-rgb), 0.3);
+    }
+
+    .step-num {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      color: var(--secondary);
+      margin-bottom: 0.8rem;
+      letter-spacing: 1px;
+    }
+
+    .step-title {
+      font-size: 1.5rem;
+      font-family: var(--font-display);
+      letter-spacing: 1px;
+      margin-bottom: 1rem;
+    }
+
+    .step-desc {
+      font-size: 0.9rem;
+      color: var(--text-body);
+    }
+
+    @media (max-width: 992px) {
+      .steps-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 3rem;
+      }
+      .steps-connector-svg {
+        display: none;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .steps-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ==========================================
+       9. VULNERABILITY TYPES (FLIP CARDS MASONRY)
+       ========================================== */
+    .vulnerabilities-section {
+      padding: 10rem 0;
+      position: relative;
+    }
+
+    .vulnerability-masonry {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-auto-rows: 280px;
+      gap: 2rem;
+      margin-top: 5rem;
+    }
+
+    .masonry-span-2 {
+      grid-column: span 2;
+    }
+
+    /* 3D Flip Card Shell */
+    .flip-card-container {
+      perspective: 1000px;
+      width: 100%;
+      height: 100%;
+      cursor: none;
+    }
+
+    .flip-card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      text-align: left;
+      transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      transform-style: preserve-3d;
+    }
+
+    .flip-card-container:hover .flip-card-inner {
+      transform: rotateY(180deg);
+    }
+
+    .flip-card-front, .flip-card-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      padding: 2.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .flip-card-front {
+      background: var(--surface);
+      color: var(--text-primary);
+    }
+
+    .flip-card-back {
+      background: var(--surface-2);
+      color: var(--text-primary);
+      transform: rotateY(180deg);
+      border-color: var(--primary);
+    }
+
+    .flip-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .flip-icon {
+      font-size: 2.2rem;
+      color: var(--primary);
+    }
+
+    .flip-card-container:nth-child(even) .flip-icon {
+      color: var(--secondary);
+    }
+
+    .flip-title {
+      font-family: var(--font-display);
+      font-size: 2.2rem;
+      line-height: 1;
+      margin-bottom: 0.8rem;
+    }
+
+    .flip-sub {
+      font-size: 0.9rem;
+      color: var(--text-subheading);
+      font-weight: 300;
+    }
+
+    .flip-desc-back {
+      font-size: 0.95rem;
+      color: var(--text-body);
+      line-height: 1.5;
+    }
+
+    .flip-back-footer {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: var(--font-display);
+      font-size: 1rem;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    @media (max-width: 992px) {
+      .vulnerability-masonry {
+        grid-template-columns: repeat(2, 1fr);
+        grid-auto-rows: auto;
+      }
+      .masonry-span-2 {
+        grid-column: span 1;
+      }
+      .flip-card-container {
+        height: 280px;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .vulnerability-masonry {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ==========================================
+       10. LIVE DEMO (DRAG SCROLL HORIZONTAL)
+       ========================================== */
+    .live-demo-section {
+      padding: 10rem 0;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .drag-scroll-container {
+      width: 100%;
+      overflow-x: scroll;
+      padding: 4rem 4rem 6rem 4rem;
+      cursor: grab;
+      scrollbar-width: none; /* Hide default scrollbar */
+      position: relative;
+    }
+
+    .drag-scroll-container::-webkit-scrollbar {
+      display: none;
+    }
+
+    .drag-scroll-container:active {
+      cursor: grabbing;
+    }
+
+    .drag-scroll-inner {
+      display: inline-flex;
+      gap: 3.5rem;
+      padding-right: 4rem;
+      will-change: transform;
+    }
+
+    .demo-card {
+      width: 480px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2.5rem;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+      user-select: none;
+      flex-shrink: 0;
+      position: relative;
+      transition: border-color var(--transition-fast), transform var(--transition-normal);
+    }
+    
+    .demo-card:nth-child(1) { transform: rotate(-1.5deg); }
+    .demo-card:nth-child(2) { transform: rotate(1deg); }
+    .demo-card:nth-child(3) { transform: rotate(-0.5deg); }
+
+    .demo-card:hover {
+      border-color: var(--primary);
+      transform: scale(1.02) rotate(0deg) !important;
+    }
+
+    .demo-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1rem;
+    }
+
+    .demo-lang {
+      font-family: var(--font-code);
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .demo-score-tag {
+      font-family: var(--font-display);
+      font-size: 1.2rem;
+      color: var(--text-primary);
+      background: var(--surface-2);
+      padding: 0.3rem 0.8rem;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+
+    .demo-score-tag span {
+      color: var(--danger);
+      font-weight: bold;
+    }
+
+    .demo-score-tag.safe span {
+      color: var(--primary);
+    }
+
+    .demo-code-box {
+      background: var(--surface-2);
+      border-radius: 6px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      font-family: var(--font-code);
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+      max-height: 120px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .demo-code-box::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 40px;
+      background: linear-gradient(to top, var(--surface-2), transparent);
+    }
+
+    .demo-vuln-info {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+    }
+
+    .demo-vuln-info i {
+      color: var(--danger);
+      font-size: 1.1rem;
+      margin-top: 0.2rem;
+    }
+
+    .demo-vuln-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 0.3rem;
+    }
+
+    .demo-vuln-desc {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+
+    .demo-arrow-hint {
+      position: absolute;
+      right: 4rem;
+      top: 4.5rem;
+      font-family: var(--font-display);
+      font-size: 1.2rem;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+    }
+
+    .demo-arrow-hint i {
+      animation: bounceRight 1.5s infinite;
+    }
+
+    @keyframes bounceRight {
+      0%, 100% { transform: translateX(0); }
+      50% { transform: translateX(8px); }
+    }
+
+    @media (max-width: 768px) {
+      .drag-scroll-container {
+        padding: 2rem 2rem 4rem 2rem;
+      }
+      .demo-card {
+        width: 320px;
+      }
+      .demo-arrow-hint {
+        display: none;
+      }
+    }
+
+    /* ==========================================
+       11. TESTIMONIALS (AUTO CAROUSEL)
+       ========================================== */
+    .testimonials-section {
+      padding: 10rem 0;
+      position: relative;
+    }
+
+    .testimonial-quote-bg {
+      position: absolute;
+      top: 5rem;
+      left: 2rem;
+      font-family: var(--font-display);
+      font-size: 20rem;
+      line-height: 1;
+      color: var(--border);
+      opacity: 0.25;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .testimonial-carousel-container {
+      max-width: 900px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 2;
+      height: 380px;
+      overflow: hidden;
+    }
+
+    .testimonial-slide {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.8s ease, visibility 0.8s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .testimonial-slide.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .testimonial-quote {
+      font-size: clamp(1.4rem, 3vw, 2.2rem);
+      font-weight: 300;
+      line-height: 1.5;
+      color: var(--text-primary);
+      margin-bottom: 2.5rem;
+      font-style: italic;
+    }
+
+    .testimonial-author-meta {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+    }
+
+    .testimonial-avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      font-weight: bold;
+      color: #000;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    .testimonial-author-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .testimonial-name {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .testimonial-role {
+      font-size: 0.85rem;
+      color: var(--text-subheading);
+    }
+
+    .carousel-nav-dots {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 3rem;
+      position: relative;
+      z-index: 2;
+    }
+
+    .carousel-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--border);
+      cursor: none;
+      transition: var(--transition-fast);
+    }
+
+    .carousel-dot.active {
+      background: var(--primary);
+      width: 28px;
+      border-radius: 10px;
+    }
+
+    /* ==========================================
+       12. FAQ ACCORDION STYLING
+       ========================================== */
+    .faq-section {
+      padding: 10rem 0;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .faq-accordion {
+      max-width: 900px;
+      margin: 4rem auto 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      position: relative;
+      z-index: 2;
+    }
+
+    .faq-item {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      transition: var(--transition-normal);
+    }
+
+    .faq-item.active {
+      border-color: var(--primary);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+    }
+
+    .faq-trigger {
+      width: 100%;
+      background: none;
+      border: none;
+      padding: 1.8rem 2.2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--text-primary);
+      font-size: 1.25rem;
+      font-weight: 600;
+      text-align: left;
+      cursor: none;
+      outline: none;
+    }
+
+    .faq-question {
+      font-family: var(--font-body);
+      transition: color var(--transition-fast);
+    }
+
+    .faq-item:hover .faq-question {
+      color: var(--primary);
+    }
+
+    .faq-icon-wrap {
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-secondary);
+      font-size: 1.2rem;
+      transition: transform var(--transition-normal), color var(--transition-normal);
+    }
+
+    .faq-item.active .faq-icon-wrap {
+      transform: rotate(45deg);
+      color: var(--primary);
+    }
+
+    .faq-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .faq-inner {
+      padding: 0 2.2rem 2.2rem 2.2rem;
+      color: var(--text-body);
+      line-height: 1.6;
+      font-size: 0.95rem;
+    }
+
+    /* ==========================================
+       13. CONTACT FORM STYLING
+       ========================================== */
+    .contact-section {
+      padding: 10rem 0;
+      position: relative;
+    }
+
+    .contact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5rem;
+      align-items: start;
+    }
+
+    @media (max-width: 992px) {
+      .contact-grid {
+        grid-template-columns: 1fr;
+        gap: 4rem;
+      }
+    }
+
+    .contact-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2.5rem;
+    }
+
+    .contact-info-text {
+      font-size: 1.15rem;
+      line-height: 1.6;
+      color: var(--text-body);
+    }
+
+    .contact-links {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .contact-link-item {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+      font-size: 1.1rem;
+      color: var(--text-primary);
+    }
+
+    .contact-link-item i {
+      width: 45px;
+      height: 45px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--primary);
+      font-size: 1.1rem;
+    }
+
+    .social-row {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .social-btn {
+      width: 50px;
+      height: 50px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-primary);
+      font-size: 1.2rem;
+      cursor: none;
+      transition: var(--transition-normal);
+    }
+
+    .social-btn:hover {
+      background: var(--primary);
+      color: #000;
+      border-color: var(--primary);
+      transform: translateY(-5px);
+      box-shadow: 0 8px 20px rgba(var(--primary-rgb), 0.25);
+    }
+
+    /* Floating Labels Form */
+    .contact-form {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 3rem;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      position: relative;
+    }
+
+    .form-group {
+      position: relative;
+      width: 100%;
+    }
+
+    .form-input {
+      width: 100%;
+      background: transparent;
+      border: none;
+      border-bottom: 1.5px solid var(--border);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      font-size: 1.05rem;
+      padding: 0.8rem 0;
+      outline: none;
+      transition: border-color var(--transition-fast);
+    }
+
+    .form-textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    .form-label {
+      position: absolute;
+      top: 0.8rem;
+      left: 0;
+      color: var(--text-subheading);
+      font-size: 1.05rem;
+      pointer-events: none;
+      transition: transform var(--transition-fast), font-size var(--transition-fast), color var(--transition-fast);
+      transform-origin: left top;
+    }
+
+    /* Floating Label Animations */
+    .form-input:focus ~ .form-label,
+    .form-input:not(:placeholder-shown) ~ .form-label {
+      transform: translateY(-20px) scale(0.8);
+      color: var(--primary);
+    }
+
+    .form-input:focus {
+      border-color: var(--primary);
+    }
+
+    /* Contact Submit Checkmark Animation */
+    .success-svg {
+      width: 40px;
+      height: 40px;
+      display: none;
+      color: var(--primary);
+      margin-left: 1rem;
+    }
+
+    .success-path {
+      stroke-dasharray: 100;
+      stroke-dashoffset: 100;
+      animation: drawCheck 0.8s ease-in-out forwards;
+    }
+
+    @keyframes drawCheck {
+      to { stroke-dashoffset: 0; }
+    }
+
+    /* ==========================================
+       14. FOOTER & CREDITS STYLING
+       ========================================== */
+    .footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 6rem 0 3rem 0;
+      position: relative;
+      z-index: 2;
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 1.5fr repeat(3, 1fr);
+      gap: 4rem;
+      margin-bottom: 5rem;
+    }
+
+    @media (max-width: 992px) {
+      .footer-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 3rem;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .footer-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .footer-desc {
+      max-width: 320px;
+      margin-top: 1.5rem;
+    }
+
+    .footer-title {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
+      letter-spacing: 1px;
+      color: var(--text-primary);
+    }
+
+    .footer-links {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .footer-links a {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      cursor: none;
+    }
+
+    .footer-links a:hover {
+      color: var(--primary);
+      transform: translateX(5px);
+    }
+
+    .footer-bottom {
+      border-top: 1px solid var(--border);
+      padding-top: 3rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+
+    .footer-copyright {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    .footer-marquee {
+      width: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 0.8rem 0;
+      margin-bottom: 3rem;
+    }
+  </style>
+</head>
+<body data-theme="dark">
+
+  <!-- Floating Canvas Background Mesh Glow -->
+  <div class="bg-mesh-gradient">
+    <div class="bg-mesh-glow bg-mesh-glow-1"></div>
+    <div class="bg-mesh-glow bg-mesh-glow-2"></div>
+  </div>
+
+  <!-- Custom Magnetic Cursor -->
+  <div class="magnetic-cursor" id="custom-cursor"></div>
+  <div class="magnetic-cursor-ring" id="custom-cursor-ring"></div>
+
+  <!-- Scroll Progress Bar -->
+  <div class="scroll-progress-container">
+    <div class="scroll-progress-bar" id="scroll-bar"></div>
+  </div>
+
+  <!-- ==========================================
+       1. NAVBAR SECTION
+       ========================================== -->
+  <nav class="navbar" id="navbar">
+    <div class="navbar-logo cursor-hover">
+      <i class="fa-solid fa-shield-halved"></i>
+      <span>SecureAI</span>
+    </div>
+    
+    <div class="navbar-menu">
+      <a href="#" class="cursor-hover">Home</a>
+      <a href="#how-it-works" class="cursor-hover">How It Works</a>
+      <a href="#vulnerabilities" class="cursor-hover">Vulnerabilities</a>
+      <a href="#demo" class="cursor-hover">Live Demo</a>
+      <a href="#faq" class="cursor-hover">FAQ</a>
+      <a href="#contact" class="cursor-hover">Contact</a>
+    </div>
+
+    <div class="navbar-actions">
+      <button class="theme-toggle-btn cursor-hover" id="theme-toggle" title="Toggle Theme">
+        <i class="fa-solid fa-moon"></i>
+      </button>
+      <a href="#tool" class="btn-liquid cursor-hover">
+        <span>Get Started</span>
+      </a>
+      <button class="nav-toggle-btn cursor-hover" id="mobile-nav-toggle">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ==========================================
+       2. HERO SECTION
+       ========================================== -->
+  <section class="hero" id="home">
+    <canvas id="hero-particles"></canvas>
+    
+    <div class="container hero-content">
+      <h1 class="hero-title" id="scramble-hero-title">
+        <span class="hero-title-outline">IS YOUR</span>
+        <span class="hero-title-filled glow-text">CODE SECURE?</span>
+      </h1>
+      
+      <p class="hero-sub">
+        SecureAI is a professional editorial-styled web system. Backed by specialized security modeling heuristics, instantly audit codebase vulnerabilities, structural flaws, and security breaches with one-click reports.
+      </p>
+      
+      <div class="hero-actions">
+        <a href="#tool" class="btn-liquid cursor-hover"><span>Review Your Code</span></a>
+        <a href="#how-it-works" class="btn-ghost cursor-hover"><span>Explore Features</span></a>
+      </div>
+    </div>
+    
+    <!-- Hero Bottom Marquee -->
+    <div class="hero-marquee">
+      <div class="marquee-inner">
+        <span><i class="fa-solid fa-circle-nodes"></i> SECURE YOUR CODE</span>
+        <span><i class="fa-solid fa-bolt"></i> AI POWERED</span>
+        <span><i class="fa-solid fa-shield-halved"></i> INSTANT ANALYSIS</span>
+        <span><i class="fa-solid fa-lock"></i> 100% PRIVATE</span>
+        <span><i class="fa-solid fa-circle-nodes"></i> SECURE YOUR CODE</span>
+        <span><i class="fa-solid fa-bolt"></i> AI POWERED</span>
+        <span><i class="fa-solid fa-shield-halved"></i> INSTANT ANALYSIS</span>
+        <span><i class="fa-solid fa-lock"></i> 100% PRIVATE</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       3. STATS BAR SECTION
+       ========================================== -->
+  <section class="stats-bar scroll-reveal">
+    <div class="container stats-grid">
+      <div class="stat-card">
+        <div class="stat-number count-up" data-target="10000" data-suffix="+">0+</div>
+        <div class="stat-label">Codes Reviewed</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number count-up" data-target="95" data-suffix="%">0%</div>
+        <div class="stat-label">Accuracy Rate</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number count-up" data-target="50" data-suffix="+">0+</div>
+        <div class="stat-label">Vulnerability Types</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number count-up" data-target="2" data-suffix="s">0s</div>
+        <div class="stat-label">Avg Review Time</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       4. MAIN REVIEW TOOL SECTION
+       ========================================== -->
+  <section class="review-tool-section scroll-reveal" id="tool">
+    <div class="container">
+      <div class="section-title-wrap">
+        <span class="section-label">THE VULNERABILITY ENGINE</span>
+        <h2 class="section-title text-scramble" data-scramble="PASTE YOUR CODE">PASTE YOUR CODE</h2>
+      </div>
+
+      <div class="tool-grid">
+        <!-- Left: Code Input IDE Container -->
+        <div class="editor-wrapper tilt-card">
+          <div class="editor-header">
+            <div class="dots-container">
+              <div class="dot dot-red"></div>
+              <div class="dot dot-yellow"></div>
+              <div class="dot dot-green"></div>
+            </div>
+            
+            <div class="lang-dropdown-wrapper">
+              <select class="lang-select cursor-hover" id="editor-lang-select">
+                <option value="javascript">JavaScript</option>
+                <option value="python">Python</option>
+                <option value="cpp">C++</option>
+                <option value="sql">SQL Query</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="editor-body">
+            <div class="line-numbers-container" id="editor-line-numbers">
+              <div>1</div>
+            </div>
+            
+            <div class="editor-area-container">
+              <textarea class="code-textarea cursor-hover-text" id="code-input" placeholder=""></textarea>
+              <div class="highlight-overlay">
+                <pre><code class="language-javascript" id="code-highlight-display"></code></pre>
+              </div>
+            </div>
+          </div>
+          
+          <div class="editor-footer">
+            <div class="editor-footer-buttons">
+              <button class="btn-liquid cursor-hover" id="btn-review">
+                <span>REVIEW CODE</span>
+              </button>
+              <button class="btn-ghost btn-clear cursor-hover" id="btn-clear" title="Clear Code">
+                <span>CLEAR</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Audit Results Column -->
+        <div class="results-wrapper">
+          <!-- Loading Overlay -->
+          <div class="loader-overlay" id="loading-overlay">
+            <div class="spinner-wrap">
+              <div class="spinner-circle"></div>
+              <div class="spinner-core"></div>
+            </div>
+            <div class="loader-text">AI RUNNING AUDIT...</div>
+          </div>
+
+          <!-- Empty placeholder state -->
+          <div class="results-empty-state" id="results-empty">
+            <i class="fa-solid fa-shield-halved results-empty-icon"></i>
+            <h3 style="font-family: var(--font-display); font-size: 1.8rem; margin-bottom: 0.8rem;">Ready for Analysis</h3>
+            <p>Your instant AI-powered code security audit report will be drawn right here.</p>
+          </div>
+
+          <!-- Dynamic Active Results Dashboard -->
+          <div class="results-active" id="results-dashboard">
+            <!-- Score & Risk Level Card -->
+            <div class="results-card" id="results-score-card">
+              <div class="score-summary-grid">
+                <div class="score-radial-wrap">
+                  <svg class="score-radial-svg">
+                    <circle class="score-radial-bg" cx="65" cy="65" r="60"></circle>
+                    <circle class="score-radial-fill" id="score-radial" cx="65" cy="65" r="60"></circle>
+                  </svg>
+                  <div class="score-value" id="score-value-text">0</div>
+                </div>
+                
+                <div class="score-details">
+                  <div class="risk-badge" id="risk-badge-element"></div>
+                  <h4 class="score-title">Audit Security Score</h4>
+                  <div class="summary-text" id="summary-typewriter"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Vulnerabilities Card -->
+            <div class="results-card" id="results-vulns-card">
+              <h4 style="font-family: var(--font-display); font-size: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.8rem;">
+                <i class="fa-solid fa-triangle-exclamation" style="color: var(--danger); margin-right: 0.5rem;"></i> Vulnerabilities Detected
+              </h4>
+              <div class="audit-list" id="vulns-list-container">
+                <!-- Staggered dynamic vulnerability items go here -->
+              </div>
+            </div>
+
+            <!-- Fixes Card -->
+            <div class="results-card" id="results-fixes-card">
+              <h4 style="font-family: var(--font-display); font-size: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.8rem;">
+                <i class="fa-solid fa-circle-check" style="color: var(--primary); margin-right: 0.5rem;"></i> Recommended Fixes
+              </h4>
+              <div class="audit-list" id="fixes-list-container">
+                <!-- Staggered dynamic fixes items go here -->
+              </div>
+            </div>
+
+            <!-- Actions Menu -->
+            <div class="results-actions-card">
+              <button class="btn-ghost cursor-hover" id="btn-download">
+                <span><i class="fa-solid fa-file-pdf"></i> Download PDF</span>
+              </button>
+              <button class="btn-ghost cursor-hover" id="btn-share">
+                <span><i class="fa-solid fa-share-nodes"></i> Share Report</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       5. HOW IT WORKS SECTION
+       ========================================== -->
+  <section class="how-it-works-section scroll-reveal" id="how-it-works">
+    <div class="container">
+      <div class="section-title-wrap" style="text-align: center;">
+        <span class="section-label">PROCESS FLOW</span>
+        <h2 class="section-title text-scramble" data-scramble="HOW IT WORKS">HOW IT WORKS</h2>
+      </div>
+
+      <div class="steps-container">
+        <!-- Connecting Line dynamic SVG -->
+        <svg class="steps-connector-svg">
+          <line class="steps-connector-bg" x1="12.5%" y1="50" x2="87.5%" y2="50"></line>
+          <line class="steps-connector-fill" id="connector-line-fill" x1="12.5%" y1="50" x2="87.5%" y2="50"></line>
+        </svg>
+
+        <div class="steps-grid">
+          <!-- Step 1 -->
+          <div class="step-card tilt-card">
+            <div class="step-icon-circle"><i class="fa-solid fa-code"></i></div>
+            <div class="step-num">STEP 01</div>
+            <h3 class="step-title">Paste Code</h3>
+            <p class="step-desc">Insert your codebase or functional query snippet into the safe, visual editor panel.</p>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="step-card tilt-card">
+            <div class="step-icon-circle"><i class="fa-solid fa-globe"></i></div>
+            <div class="step-num">STEP 02</div>
+            <h3 class="step-title">Select Language</h3>
+            <p class="step-desc">Target the specific language model parameter dropdown for highly focused analysis guidelines.</p>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="step-card tilt-card">
+            <div class="step-icon-circle"><i class="fa-solid fa-microchip"></i></div>
+            <div class="step-num">STEP 03</div>
+            <h3 class="step-title">AI Analysis</h3>
+            <p class="step-desc">SecureAI triggers local heuristic audits evaluating vectors, dependencies, and flaws instantly.</p>
+          </div>
+
+          <!-- Step 4 -->
+          <div class="step-card tilt-card">
+            <div class="step-icon-circle"><i class="fa-solid fa-file-invoice"></i></div>
+            <div class="step-num">STEP 04</div>
+            <h3 class="step-title">Get Report</h3>
+            <p class="step-desc">Generate secure radial scores, vulnerability checklists, fixes, and download reports.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       6. VULNERABILITY TYPES (Masonry Layout)
+       ========================================== -->
+  <section class="vulnerabilities-section scroll-reveal" id="vulnerabilities">
+    <div class="container">
+      <div class="section-title-wrap">
+        <span class="section-label">AI AUDIT COVERAGE</span>
+        <h2 class="section-title text-scramble" data-scramble="THREATS DETECTED">THREATS DETECTED</h2>
+      </div>
+
+      <div class="vulnerability-masonry">
+        <!-- Card 1 (Span 2) -->
+        <div class="flip-card-container masonry-span-2 tilt-card">
+          <div class="flip-card-inner">
+            <div class="flip-card-front">
+              <div class="flip-header">
+                <i class="fa-solid fa-database flip-icon"></i>
+                <span class="flip-sub">SQL Database Integrity</span>
+              </div>
+              <div>
+                <h3 class="flip-title">SQL Injection (SQLi)</h3>
+                <span class="flip-sub">Hover to inspect mitigation strategy</span>
+              </div>
+            </div>
+            <div class="flip-card-back">
+              <h3 style="font-family: var(--font-display); font-size: 1.8rem; margin-bottom: 0.8rem; color: var(--primary);">SQL INJECTION THREAT</h3>
+              <p class="flip-desc-back">Unescaped input concatenation directly inside query strings lets malicious users run commands on database files. Easily bypassed using parameterized SQL frameworks.</p>
+              <div class="flip-back-footer"><i class="fa-solid fa-shield-halved"></i> SECURED INTERFACES</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="flip-card-container tilt-card">
+          <div class="flip-card-inner">
+            <div class="flip-card-front">
+              <div class="flip-header">
+                <i class="fa-solid fa-laptop-code flip-icon"></i>
+                <span class="flip-sub">XSS Vectors</span>
+              </div>
+              <div>
+                <h3 class="flip-title">XSS Exploits</h3>
+                <span class="flip-sub">Hover to inspect</span>
+              </div>
+            </div>
+            <div class="flip-card-back">
+              <h3 style="font-family: var(--font-display); font-size: 1.8rem; margin-bottom: 0.8rem; color: var(--secondary);">CROSS SITE SCRIPTING</h3>
+              <p class="flip-desc-back">Injecting dynamic user queries to variables like innerHTML enables external scripts inside customer browsers, exposing cookies and sessions.</p>
+              <div class="flip-back-footer"><i class="fa-solid fa-check"></i> DOM PROTECTION</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="flip-card-container tilt-card">
+          <div class="flip-card-inner">
+            <div class="flip-card-front">
+              <div class="flip-header">
+                <i class="fa-solid fa-key flip-icon"></i>
+                <span class="flip-sub">Credentials Exposure</span>
+              </div>
+              <div>
+                <h3 class="flip-title">Hardcoded Secrets</h3>
+                <span class="flip-sub">Hover to inspect</span>
+              </div>
+            </div>
+            <div class="flip-card-back">
+              <h3 style="font-family: var(--font-display); font-size: 1.8rem; margin-bottom: 0.8rem; color: var(--primary);">CREDENTIAL LEAKS</h3>
+              <p class="flip-desc-back">Storing raw API tokens, passwords, and private certificates in code repositories allows bots to scrape and exploit billing resources.</p>
+              <div class="flip-back-footer"><i class="fa-solid fa-shield-halved"></i> VAULT ENVELOPE</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 4 (Span 2) -->
+        <div class="flip-card-container masonry-span-2 tilt-card">
+          <div class="flip-card-inner">
+            <div class="flip-card-front">
+              <div class="flip-header">
+                <i class="fa-solid fa-network-wired flip-icon"></i>
+                <span class="flip-sub">Insecure Endpoints</span>
+              </div>
+              <div>
+                <h3 class="flip-title">Broken Authorization (APIs)</h3>
+                <span class="flip-sub">Hover to inspect</span>
+              </div>
+            </div>
+            <div class="flip-card-back">
+              <h3 style="font-family: var(--font-display); font-size: 1.8rem; margin-bottom: 0.8rem; color: var(--secondary);">API ACCESS SECURITY</h3>
+              <p class="flip-desc-back">Exposing endpoints without validation allows non-admin users to scrape user metadata. Audited using strict role-based access checks.</p>
+              <div class="flip-back-footer"><i class="fa-solid fa-lock"></i> AUTH CONTROL</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       7. LIVE DEMO PREVIEW (DRAG SCROLL HORIZONTAL)
+       ========================================== -->
+  <section class="live-demo-section scroll-reveal" id="demo">
+    <div class="container">
+      <div class="section-title-wrap">
+        <span class="section-label">EDITORIAL PREVIEW</span>
+        <h2 class="section-title text-scramble" data-scramble="LIVE REVIEWS">LIVE REVIEWS</h2>
+      </div>
+      
+      <div class="demo-arrow-hint">DRAG TO EXPLORE <i class="fa-solid fa-arrow-right"></i></div>
+    </div>
+
+    <!-- Drag scroll wrapper -->
+    <div class="drag-scroll-container" id="demo-drag-scroll">
+      <div class="drag-scroll-inner">
+        
+        <!-- Card 1 -->
+        <div class="demo-card">
+          <div class="demo-header">
+            <span class="demo-lang">PYTHON</span>
+            <div class="demo-score-tag">SCORE: <span>35/100</span></div>
+          </div>
+          <div class="demo-code-box">
+import sqlite3
+def login(user, password):
+    conn = sqlite3.connect("users.db")
+    query = f"SELECT * FROM users WHERE user='{user}' AND pass='{password}'"
+    conn.execute(query)
+          </div>
+          <div class="demo-vuln-info">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <div>
+              <h4 class="demo-vuln-title">SQL Injection Detected</h4>
+              <p class="demo-vuln-desc">Direct interpolation of the dynamic variables <code>user</code> and <code>password</code> into raw SQL strings allows total authentication bypass.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="demo-card">
+          <div class="demo-header">
+            <span class="demo-lang">JAVASCRIPT</span>
+            <div class="demo-score-tag">SCORE: <span>50/100</span></div>
+          </div>
+          <div class="demo-code-box">
+const userInput = getQueryParam('info');
+const textContainer = document.getElementById('output');
+textContainer.innerHTML = userInput;
+          </div>
+          <div class="demo-vuln-info">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <div>
+              <h4 class="demo-vuln-title">DOM XSS Vulnerability</h4>
+              <p class="demo-vuln-desc">Direct assignment of dynamic unescaped browser search queries into <code>innerHTML</code> enables custom JavaScript injection attacks.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="demo-card">
+          <div class="demo-header">
+            <span class="demo-lang">C++ / C</span>
+            <div class="demo-score-tag">SCORE: <span>45/100</span></div>
+          </div>
+          <div class="demo-code-box">
+#include &lt;iostream&gt;
+void loadBuffer() {
+    char username[16];
+    std::cout << "Enter username: ";
+    std::cin >> username; // Unbounded read!
+}
+          </div>
+          <div class="demo-vuln-info">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <div>
+              <h4 class="demo-vuln-title">Stack Buffer Overflow</h4>
+              <p class="demo-vuln-desc">Using unbounded standard terminal reads into fixed 16-byte character buffers allows stack memory allocation overrides.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 4 -->
+        <div class="demo-card">
+          <div class="demo-header">
+            <span class="demo-lang">NODE.JS</span>
+            <div class="demo-score-tag safe">SCORE: <span style="color: var(--primary);">98/100</span></div>
+          </div>
+          <div class="demo-code-box">
+const crypto = require('crypto');
+function hashPassword(password, salt) {
+    return crypto.pbkdf2Sync(password, salt, 100000, 64, 'sha512');
+}
+          </div>
+          <div class="demo-vuln-info">
+            <i class="fa-solid fa-circle-check" style="color: var(--primary);"></i>
+            <div>
+              <h4 class="demo-vuln-title" style="color: var(--text-primary);">Strong Password Cryptography</h4>
+              <p class="demo-vuln-desc">Utilizing robust sync standard PBKDF2 cryptography algorithms with deep salt configurations is perfectly compliant.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       8. TESTIMONIALS SECTION
+       ========================================== -->
+  <section class="testimonials-section scroll-reveal">
+    <div class="testimonial-quote-bg">“</div>
+    
+    <div class="container">
+      <div class="testimonial-carousel-container">
+        
+        <!-- Slide 1 -->
+        <div class="testimonial-slide active">
+          <p class="testimonial-quote">
+            "SecureAI has completely re-shaped our repository push checklist. The magazine-inspired editorial visuals are beautiful, and the security score heuristic engine caught three major environment secret leaks before our cloud pipeline builds."
+          </p>
+          <div class="testimonial-author-meta">
+            <div class="testimonial-avatar">HA</div>
+            <div class="testimonial-author-info">
+              <span class="testimonial-name">Helena Adams</span>
+              <span class="testimonial-role">Lead DevOps Engineer, FW/ Tech Labs</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slide 2 -->
+        <div class="testimonial-slide">
+          <p class="testimonial-quote">
+            "I couldn't believe an automated tool could identify DOM-based XSS vectors with line-by-line breakdown in milliseconds. The custom line highlighting synchronizations make diagnosing raw scripts look incredibly premium."
+          </p>
+          <div class="testimonial-author-meta">
+            <div class="testimonial-avatar">MK</div>
+            <div class="testimonial-author-info">
+              <span class="testimonial-name">Markus Kross</span>
+              <span class="testimonial-role">Security Auditor, CyberOps Global</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slide 3 -->
+        <div class="testimonial-slide">
+          <p class="testimonial-quote">
+            "Direct parameterized SQL recommendation reports saved our team hours of manual reviews. Exporting these interactive auditor scores as standard PDFs makes our client reports look top-tier."
+          </p>
+          <div class="testimonial-author-meta">
+            <div class="testimonial-avatar">RL</div>
+            <div class="testimonial-author-info">
+              <span class="testimonial-name">Rian Lockhart</span>
+              <span class="testimonial-role">Full Stack Developer, AppForge</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Navigation Dots -->
+      <div class="carousel-nav-dots" id="carousel-dots">
+        <div class="carousel-dot active" data-slide="0"></div>
+        <div class="carousel-dot" data-slide="1"></div>
+        <div class="carousel-dot" data-slide="2"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       9. FAQ ACCORDION SECTION
+       ========================================== -->
+  <section class="faq-section scroll-reveal" id="faq">
+    <div class="container">
+      <div class="section-title-wrap" style="text-align: center;">
+        <span class="section-label">COMMON INQUIRIES</span>
+        <h2 class="section-title text-scramble" data-scramble="ACCORDION INFO">ACCORDION INFO</h2>
+      </div>
+
+      <div class="faq-accordion">
+        
+        <!-- FAQ 1 -->
+        <div class="faq-item">
+          <button class="faq-trigger cursor-hover">
+            <span class="faq-question">How does the heuristic analyzer evaluate vulnerabilities?</span>
+            <div class="faq-icon-wrap"><i class="fa-solid fa-plus"></i></div>
+          </button>
+          <div class="faq-content">
+            <div class="faq-inner">
+              SecureAI utilizes a highly optimized client-side heuristic indexing engine. By mapping syntax patterns to common CVE categories (such as unparameterized raw SQL, direct assignments to innerHTML, or unbounded system utility calls), it instantly tracks potential security gaps and identifies exact code lines.
+            </div>
+          </div>
+        </div>
+
+        <!-- FAQ 2 -->
+        <div class="faq-item">
+          <button class="faq-trigger cursor-hover">
+            <span class="faq-question">Is my code secure and private?</span>
+            <div class="faq-icon-wrap"><i class="fa-solid fa-plus"></i></div>
+          </button>
+          <div class="faq-content">
+            <div class="faq-inner">
+              Absolutely. In Simulated Mode, your code never leaves your local browser. All processing, tokenization, syntax matches, score calculations, and report compilations are executed purely on the client side, keeping your secrets 100% private.
+            </div>
+          </div>
+        </div>
+
+        <!-- FAQ 3 -->
+        <div class="faq-item">
+          <button class="faq-trigger cursor-hover">
+            <span class="faq-question">Which languages are natively supported?</span>
+            <div class="faq-icon-wrap"><i class="fa-solid fa-plus"></i></div>
+          </button>
+          <div class="faq-content">
+            <div class="faq-inner">
+              We natively support syntax highlighting and heuristic threat detection rules for JavaScript, Python, C++, and standard SQL queries. The interface dynamically synchronizes highlight rules automatically on keypress.
+            </div>
+          </div>
+        </div>
+
+        <!-- FAQ 4 -->
+        <div class="faq-item">
+          <button class="faq-trigger cursor-hover">
+            <span class="faq-question">Can I configure standard Gemini API keys?</span>
+            <div class="faq-icon-wrap"><i class="fa-solid fa-plus"></i></div>
+          </button>
+          <div class="faq-content">
+            <div class="faq-inner">
+              Yes, our system is designed to support direct REST integrations. While simulated mode handles out-of-the-box reviews instantly, you can integrate your custom Google Developer keys directly into the source integration hooks to call the <code>gemini-1.5-flash</code> cloud model.
+            </div>
+          </div>
+        </div>
+
+        <!-- FAQ 5 -->
+        <div class="faq-item">
+          <button class="faq-trigger cursor-hover">
+            <span class="faq-question">Does it integrate into automated pipelines?</span>
+            <div class="faq-icon-wrap"><i class="fa-solid fa-plus"></i></div>
+          </button>
+          <div class="faq-content">
+            <div class="faq-inner">
+              This client application is fully designed to act as an editorial hub. For automated pipelines, the underlying static parsing parameters can easily be compiled into custom github action scripts or pre-commit verification workflows.
+            </div>
+          </div>
+        </div>
+
+        <!-- FAQ 6 -->
+        <div class="faq-item">
+          <button class="faq-trigger cursor-hover">
+            <span class="faq-question">How does PDF download formatting work?</span>
+            <div class="faq-icon-wrap"><i class="fa-solid fa-plus"></i></div>
+          </button>
+          <div class="faq-content">
+            <div class="faq-inner">
+              When clicking "Download PDF", our system triggers a custom print-media layout wrapper, hiding standard UI navigation, buttons, and decorative particle grids. It outputs a beautifully formatted, clean, high-contrast black-and-white security report sheet ready for printing.
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       10. CONTACT SECTION
+       ========================================== -->
+  <section class="contact-section scroll-reveal" id="contact">
+    <div class="container">
+      <div class="contact-grid">
+        
+        <!-- Left Column Info -->
+        <div class="contact-info">
+          <div>
+            <span class="section-label">GET IN TOUCH</span>
+            <h2 class="section-title text-scramble" data-scramble="LET'S SECURE">LET'S SECURE</h2>
+            <h2 class="section-title text-scramble" data-scramble="YOUR APP">YOUR APP</h2>
+          </div>
+          
+          <p class="contact-info-text">
+            Have custom requirements or need to scale automated security reviews across large teams? Get in touch with our team today.
+          </p>
+
+          <div class="contact-links">
+            <div class="contact-link-item">
+              <i class="fa-solid fa-envelope"></i>
+              <span>secure@secureai.io</span>
+            </div>
+            <div class="contact-link-item">
+              <i class="fa-solid fa-location-dot"></i>
+              <span>Editorial Square, London, EC1</span>
+            </div>
+          </div>
+
+          <div class="social-row">
+            <a href="#" class="social-btn cursor-hover"><i class="fa-brands fa-github"></i></a>
+            <a href="#" class="social-btn cursor-hover"><i class="fa-brands fa-linkedin"></i></a>
+            <a href="#" class="social-btn cursor-hover"><i class="fa-brands fa-twitter"></i></a>
+          </div>
+        </div>
+
+        <!-- Right Column Form -->
+        <form class="contact-form" id="contact-form">
+          <div class="form-group">
+            <input type="text" class="form-input cursor-hover-text" id="contact-name" placeholder=" " required>
+            <label class="form-label" for="contact-name">Name</label>
+          </div>
+
+          <div class="form-group">
+            <input type="email" class="form-input cursor-hover-text" id="contact-email" placeholder=" " required>
+            <label class="form-label" for="contact-email">Email</label>
+          </div>
+
+          <div class="form-group">
+            <textarea class="form-input form-textarea cursor-hover-text" id="contact-message" placeholder=" " required></textarea>
+            <label class="form-label" for="contact-message">Message</label>
+          </div>
+
+          <div style="display: flex; align-items: center; justify-content: flex-start;">
+            <button class="btn-liquid cursor-hover" type="submit">
+              <span>Send Message</span>
+            </button>
+            
+            <svg class="success-svg" id="form-success-check" viewBox="0 0 52 52">
+              <circle fill="none" stroke="currentColor" stroke-width="4" cx="26" cy="26" r="23" style="stroke-dasharray: 200; stroke-dashoffset: 0;"></circle>
+              <path class="success-path" fill="none" stroke="currentColor" stroke-width="4" d="M14 27l8 8 16-16"></path>
+            </svg>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       11. FOOTER & CREDITS SECTION
+       ========================================== -->
+  <footer class="footer">
+    <div class="footer-marquee">
+      <div class="marquee-inner">
+        <span><i class="fa-solid fa-shield-halved"></i> SECURE CODE</span>
+        <span><i class="fa-solid fa-bolt"></i> POWERED BY AI</span>
+        <span><i class="fa-solid fa-lock"></i> 100% PRIVATE</span>
+        <span><i class="fa-solid fa-shield-halved"></i> SECURE CODE</span>
+        <span><i class="fa-solid fa-bolt"></i> POWERED BY AI</span>
+        <span><i class="fa-solid fa-lock"></i> 100% PRIVATE</span>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="navbar-logo" style="padding: 0; margin-bottom: 1.5rem;">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span>SecureAI</span>
+          </div>
+          <p class="footer-desc">
+            A premium editorial-styled static intelligence suite engineered to inspect security breaches instantly.
+          </p>
+        </div>
+
+        <div>
+          <h4 class="footer-title">Navigation</h4>
+          <div class="footer-links">
+            <a href="#" class="cursor-hover">Home</a>
+            <a href="#how-it-works" class="cursor-hover">How It Works</a>
+            <a href="#vulnerabilities" class="cursor-hover">Vulnerabilities</a>
+            <a href="#demo" class="cursor-hover">Live Demo</a>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="footer-title">Legal</h4>
+          <div class="footer-links">
+            <a href="#" class="cursor-hover">Privacy Policy</a>
+            <a href="#" class="cursor-hover">Terms of Service</a>
+            <a href="#" class="cursor-hover">Security Standard</a>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="footer-title">Connect</h4>
+          <div class="footer-links">
+            <a href="#" class="cursor-hover">GitHub Profile</a>
+            <a href="#" class="cursor-hover">LinkedIn Network</a>
+            <a href="#" class="cursor-hover">Twitter Updates</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div class="footer-copyright">&copy; 2026 SecureAI. Engineered for excellence.</div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Floating Back to Top Button -->
+  <button class="back-to-top cursor-hover" id="back-to-top" title="Back to Top">
+    <i class="fa-solid fa-arrow-up"></i>
+  </button>
+
+  <!-- Print media styles override for elegant clean reports -->
+  <style media="print">
+    body, html {
+      background: #ffffff !important;
+      color: #000000 !important;
+      font-size: 12pt !important;
+      cursor: auto !important;
+    }
+    .navbar, .hero, .stats-bar, .how-it-works-section, .vulnerabilities-section, 
+    .live-demo-section, .testimonials-section, .faq-section, .contact-section, 
+    .footer, .back-to-top, .scroll-progress-container, .bg-mesh-gradient, 
+    .magnetic-cursor, .magnetic-cursor-ring, .editor-wrapper, .results-actions-card {
+      display: none !important;
+    }
+    .review-tool-section {
+      padding: 0 !important;
+    }
+    .tool-grid {
+      display: block !important;
+    }
+    .results-wrapper {
+      display: block !important;
+      min-height: auto !important;
+    }
+    .results-active {
+      display: flex !important;
+    }
+    .results-card {
+      box-shadow: none !important;
+      border: 1px solid #cccccc !important;
+      background: #ffffff !important;
+      color: #000000 !important;
+      margin-bottom: 20px !important;
+      page-break-inside: avoid !important;
+      opacity: 1 !important;
+      transform: none !important;
+    }
+    .audit-item {
+      background: #f9f9f9 !important;
+      border: 1px solid #dddddd !important;
+      border-left: 5px solid #ff2244 !important;
+      color: #000000 !important;
+      opacity: 1 !important;
+      transform: none !important;
+    }
+    .audit-item.fix-item {
+      border-left-color: #00cc66 !important;
+    }
+    .audit-desc, .summary-text, .score-title {
+      color: #333333 !important;
+    }
+    .score-radial-bg {
+      stroke: #eeeeee !important;
+    }
+  </style>
+
+  <!-- ==========================================
+       15. JAVASCRIPT GLOBAL INTERACTION & CONTROLLER
+       ========================================== -->
+  <script>
+    /* ==========================================
+       A. CUSTOM MAGNETIC CURSOR
+       ========================================== */
+    const cursorDot = document.getElementById('custom-cursor');
+    const cursorRing = document.getElementById('custom-cursor-ring');
+    let mouseX = 0, mouseY = 0;
+    let ringX = 0, ringY = 0;
+
+    window.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+      
+      // Instantly position the dot
+      cursorDot.style.left = mouseX + 'px';
+      cursorDot.style.top = mouseY + 'px';
+    });
+
+    // Animate ring trailing with spring easing
+    function animateCursorRing() {
+      const ease = 0.15; // Smooth multiplier
+      ringX += (mouseX - ringX) * ease;
+      ringY += (mouseY - ringY) * ease;
+      
+      cursorRing.style.left = ringX + 'px';
+      cursorRing.style.top = ringY + 'px';
+      
+      requestAnimationFrame(animateCursorRing);
+    }
+    requestAnimationFrame(animateCursorRing);
+
+    // Dynamic Hover States
+    function bindCursorHovers() {
+      const hovers = document.querySelectorAll('.cursor-hover');
+      hovers.forEach(el => {
+        el.addEventListener('mouseenter', () => {
+          document.body.classList.add('cursor-hover-active');
+        });
+        el.addEventListener('mouseleave', () => {
+          document.body.classList.remove('cursor-hover-active');
+        });
+      });
+
+      const inputs = document.querySelectorAll('.cursor-hover-text');
+      inputs.forEach(el => {
+        el.addEventListener('mouseenter', () => {
+          document.body.classList.add('cursor-hover-input');
+        });
+        el.addEventListener('mouseleave', () => {
+          document.body.classList.remove('cursor-hover-input');
+        });
+      });
+    }
+    bindCursorHovers();
+
+
+    /* ==========================================
+       B. TEXT SCRAMBLE ANIMATOR
+       ========================================== */
+    class TextScramble {
+      constructor(el) {
+        this.el = el;
+        this.chars = '!@#$%^&*()_+~`|}{[]:;?><,./-=';
+        this.update = this.update.bind(this);
+      }
+      
+      setText(newText) {
+        const oldText = this.el.innerText;
+        const length = Math.max(oldText.length, newText.length);
+        const promise = new Promise((resolve) => this.resolve = resolve);
+        this.queue = [];
+        for (let i = 0; i < length; i++) {
+          const from = oldText[i] || '';
+          const to = newText[i] || '';
+          const start = Math.floor(Math.random() * 40);
+          const end = start + Math.floor(Math.random() * 40);
+          this.queue.push({ from, to, start, end });
+        }
+        cancelAnimationFrame(this.frameRequest);
+        this.frame = 0;
+        this.update();
+        return promise;
+      }
+      
+      update() {
+        let output = '';
+        let complete = 0;
+        for (let i = 0, n = this.queue.length; i < n; i++) {
+          let { from, to, start, end, char } = this.queue[i];
+          if (this.frame >= end) {
+            complete++;
+            output += to;
+          } else if (this.frame >= start) {
+            if (!char || Math.random() < 0.28) {
+              char = this.randomChar();
+              this.queue[i].char = char;
+            }
+            output += `<span style="color: var(--primary); font-weight: 800;">${char}</span>`;
+          } else {
+            output += from;
+          }
+        }
+        this.el.innerHTML = output;
+        if (complete === this.queue.length) {
+          this.resolve();
+        } else {
+          this.frame++;
+          this.frameRequest = requestAnimationFrame(this.update);
+        }
+      }
+      
+      randomChar() {
+        return this.chars[Math.floor(Math.random() * this.chars.length)];
+      }
+    }
+
+    // Initialize scramble on main Hero Title
+    window.addEventListener('load', () => {
+      const heroLine1 = document.querySelector('.hero-title-outline');
+      const heroLine2 = document.querySelector('.hero-title-filled');
+      
+      const scramble1 = new TextScramble(heroLine1);
+      const scramble2 = new TextScramble(heroLine2);
+      
+      scramble1.setText("IS YOUR");
+      setTimeout(() => {
+        scramble2.setText("CODE SECURE?");
+      }, 350);
+    });
+
+
+
+
+
+
+    /* ==========================================
+       D. VIEWPORT INTERSECTION OBSERVER
+       ========================================== */
+    // Scroll progress indicator
+    const scrollBar = document.getElementById('scroll-bar');
+    window.addEventListener('scroll', () => {
+      const winScroll = document.documentElement.scrollTop || document.body.scrollTop;
+      const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      const scrolled = (winScroll / height) * 100;
+      scrollBar.style.width = scrolled + '%';
+      
+      // Navbar Hide/Reveal on scroll
+      handleNavbarScroll();
+      
+      // Floating back-to-top visibility
+      const backToTop = document.getElementById('back-to-top');
+      if (window.scrollY > 400) {
+        backToTop.classList.add('visible');
+      } else {
+        backToTop.classList.remove('visible');
+      }
+    });
+
+    // Navbar scroll control
+    let lastScrollTop = 0;
+    const navbar = document.getElementById('navbar');
+    function handleNavbarScroll() {
+      const st = window.pageYOffset || document.documentElement.scrollTop;
+      if (st > lastScrollTop && st > 100) {
+        // Scroll down
+        navbar.classList.add('nav-hidden');
+      } else {
+        // Scroll up
+        navbar.classList.remove('nav-hidden');
+      }
+      lastScrollTop = st <= 0 ? 0 : st;
+    }
+
+    // Scroll back to top trigger
+    document.getElementById('back-to-top').addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // Reveal elements entering viewport
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('revealed');
+          
+          // Scramble text inside this element if it has '.text-scramble'
+          const scrambles = entry.target.querySelectorAll('.text-scramble');
+          scrambles.forEach(item => {
+            const originalText = item.getAttribute('data-scramble');
+            const fx = new TextScramble(item);
+            fx.setText(originalText);
+          });
+          
+          // Trigger numbers counting inside this element
+          const counters = entry.target.querySelectorAll('.count-up');
+          counters.forEach(counter => {
+            runCounter(counter);
+          });
+          
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.02 });
+
+    document.querySelectorAll('.scroll-reveal').forEach(el => {
+      revealObserver.observe(el);
+    });
+
+    // Count Up Animator
+    function runCounter(counter) {
+      const target = parseInt(counter.getAttribute('data-target'));
+      const suffix = counter.getAttribute('data-suffix') || '';
+      let current = 0;
+      const duration = 1500; // 1.5 seconds
+      const steps = 60;
+      const stepValue = target / steps;
+      const intervalTime = duration / steps;
+      
+      const timer = setInterval(() => {
+        current += stepValue;
+        if (current >= target) {
+          counter.innerText = target.toLocaleString() + suffix;
+          clearInterval(timer);
+        } else {
+          counter.innerText = Math.floor(current).toLocaleString() + suffix;
+        }
+      }, intervalTime);
+    }
+
+
+    /* ==========================================
+       E. 3D TILT EFFECT CARDS
+       ========================================== */
+    const tiltCards = document.querySelectorAll('.tilt-card');
+    tiltCards.forEach(card => {
+      card.addEventListener('mousemove', (e) => {
+        // Restrict tilt on touch devices
+        if (window.innerWidth <= 1024) return;
+        
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left; // Mouse x relative to element bounds
+        const y = e.clientY - rect.top;  // Mouse y relative to element bounds
+        
+        // Normalize coordinates from -0.5 to 0.5
+        const normX = (x / rect.width) - 0.5;
+        const normY = (y / rect.height) - 0.5;
+        
+        // Max rotation angle in degrees
+        const maxTilt = 15;
+        const tiltX = -normY * maxTilt;
+        const tiltY = normX * maxTilt;
+        
+        card.style.transform = `perspective(1000px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) scale3d(1.02, 1.02, 1.02)`;
+      });
+      
+      card.addEventListener('mouseleave', () => {
+        card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)';
+      });
+    });
+
+
+    /* ==========================================
+       F. CUSTOM CODE EDITOR CONTEXT SYNCHRONIZATION
+       ========================================== */
+    const codeInput = document.getElementById('code-input');
+    const highlightDisplay = document.getElementById('code-highlight-display');
+    const lineNumbers = document.getElementById('editor-line-numbers');
+    const langSelect = document.getElementById('editor-lang-select');
+    
+    // Typewriter effect on editor placeholder
+    const placeholderExamples = {
+      javascript: `// Paste your JavaScript code here
+function evaluateSession(user) {
+    let query = "SELECT * FROM sessions WHERE id = '" + user.id + "'";
+    database.execute(query);
+}`,
+      python: `# Paste your Python code here
+def check_authentication(request):
+    token = request.headers.get("Authorization")
+    if token == "super_secret_admin_token_12345":
+        grant_access()`
+    };
+
+    let typingTimer;
+    function typePlaceholder(text, index = 0) {
+      if (index < text.length) {
+        codeInput.placeholder += text.charAt(index);
+        typingTimer = setTimeout(() => typePlaceholder(text, index + 1), 15);
+      }
+    }
+    
+    // Trigger typewriter placeholder on load
+    typePlaceholder(placeholderExamples.javascript);
+
+    // Synced Editor Scroll & Content updates
+    function updateEditor() {
+      const text = codeInput.value;
+      
+      // Escape HTML tags to prevent custom execution
+      const escaped = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+      
+      highlightDisplay.innerHTML = escaped;
+      
+      // Apply HighlightJS color hooks
+      hljs.highlightElement(highlightDisplay);
+      
+      // Re-compile dynamic lines numbers
+      const lines = text.split('\n');
+      let numHtml = '';
+      for (let i = 1; i <= Math.max(lines.length, 1); i++) {
+        numHtml += `<div>${i}</div>`;
+      }
+      lineNumbers.innerHTML = numHtml;
+    }
+
+    codeInput.addEventListener('input', updateEditor);
+    
+    // Sync double overlays scroll coordinates
+    codeInput.addEventListener('scroll', () => {
+      const scrollOverlay = document.querySelector('.highlight-overlay');
+      scrollOverlay.scrollTop = codeInput.scrollTop;
+      scrollOverlay.scrollLeft = codeInput.scrollLeft;
+      lineNumbers.scrollTop = codeInput.scrollTop;
+    });
+
+    // Language dropdown synchronization
+    langSelect.addEventListener('change', () => {
+      const selected = langSelect.value;
+      highlightDisplay.className = `language-${selected}`;
+      
+      // Clear and type new placeholder
+      clearTimeout(typingTimer);
+      codeInput.placeholder = '';
+      if (placeholderExamples[selected]) {
+        typePlaceholder(placeholderExamples[selected]);
+      } else {
+        codeInput.placeholder = `// Paste your ${selected.toUpperCase()} code here...`;
+      }
+      
+      updateEditor();
+    });
+
+    // Ctrl + Enter shortcut listener to review code
+    window.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        const activeEl = document.activeElement;
+        if (activeEl === codeInput) {
+          e.preventDefault();
+          document.getElementById('btn-review').click();
+        }
+      }
+    });
+
+
+    /* ==========================================
+       C. THEME SYSTEM & ACCENTS
+       ========================================== */
+    const themeToggleBtn = document.getElementById('theme-toggle');
+    const themeIcon = themeToggleBtn.querySelector('i');
+    const hljsThemeLink = document.getElementById('hljs-theme-link');
+
+    // Load persisted theme
+    const savedTheme = localStorage.getItem('secureai_theme') || 'dark';
+    document.body.setAttribute('data-theme', savedTheme);
+    updateThemeUI(savedTheme);
+
+    themeToggleBtn.addEventListener('click', () => {
+      const currentTheme = document.body.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      document.body.setAttribute('data-theme', newTheme);
+      localStorage.setItem('secureai_theme', newTheme);
+      updateThemeUI(newTheme);
+    });
+
+    function updateThemeUI(theme) {
+      if (theme === 'dark') {
+        themeIcon.className = 'fa-solid fa-sun';
+        hljsThemeLink.href = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/atom-one-dark.min.css";
+      } else {
+        themeIcon.className = 'fa-solid fa-moon';
+        hljsThemeLink.href = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css";
+      }
+      
+      // Re-trigger highlighting if editor has text
+      if (typeof updateEditor === 'function') {
+        updateEditor();
+      }
+    }
+
+
+    /* ==========================================
+       G. HEURISTIC SECURITY AUDIT ENGINE
+       ========================================== */
+    const btnReview = document.getElementById('btn-review');
+    const btnClear = document.getElementById('btn-clear');
+    const loadingOverlay = document.getElementById('loading-overlay');
+    
+    const resultsEmpty = document.getElementById('results-empty');
+    const resultsDashboard = document.getElementById('results-dashboard');
+    const scoreRadial = document.getElementById('score-radial');
+    const scoreValText = document.getElementById('score-value-text');
+    const riskBadge = document.getElementById('risk-badge-element');
+    const summaryTypewriter = document.getElementById('summary-typewriter');
+    
+    const vulnsContainer = document.getElementById('vulns-list-container');
+    const fixesContainer = document.getElementById('fixes-list-container');
+
+    // Persist code cache
+    const cachedCode = localStorage.getItem('secureai_last_code');
+    if (cachedCode) {
+      codeInput.value = cachedCode;
+      updateEditor();
+    }
+
+    btnClear.addEventListener('click', () => {
+      codeInput.value = '';
+      localStorage.removeItem('secureai_last_code');
+      updateEditor();
+      
+      // Reset dashboard visual state
+      resultsDashboard.style.display = 'none';
+      resultsEmpty.style.display = 'flex';
+      btnReview.classList.remove('cursor-hover-active');
+    });
+
+    // Rules database mapping keywords to findings
+    const HEURISTIC_DATABASE = {
+      sql: {
+        score: 35,
+        risk: 'critical',
+        badge: 'CRITICAL THREAT',
+        vulnerabilities: [
+          { type: 'SQL Injection Vulnerability', line: 3, desc: 'Dynamic database concatenations detected inside raw execute statements. Attackers can injection parameters to read/drop local databases.' },
+          { type: 'Broken Access Permission checks', line: 5, desc: 'Queries are being triggered without active role validation middleware, leading to insecure metadata exposure.' }
+        ],
+        fixes: [
+          { issue: 'SQL Injection', fix: 'Migrate raw parameter injections to Parameterized Prepared Statements or utilize a robust ORM.' },
+          { issue: 'Insecure Access Controls', fix: 'Implement strict header authorization parsing to validate session scopes prior to database reads.' }
+        ],
+        summary: 'Critical vulnerability detected. Unsanitized strings in query bindings leave your database susceptible to severe data leakages. Secure before releasing to staging.'
+      },
+      xss: {
+        score: 48,
+        risk: 'high',
+        badge: 'HIGH RISK',
+        vulnerabilities: [
+          { type: 'Cross-Site Scripting (DOM XSS)', line: 4, desc: 'Dynamic browser values are being directly output to properties like innerHTML. Facilitates remote execution of malicious scripts.' }
+        ],
+        fixes: [
+          { issue: 'DOM Cross-Site Scripting', fix: 'Use textContent / innerText properties to escape elements, or route properties through DOMPurify filters.' }
+        ],
+        summary: 'High risk security breach detected. Unfiltered rendering of search parameters leaves clients exposed to session hijacking and credential harvesting overlays.'
+      },
+      secrets: {
+        score: 22,
+        risk: 'critical',
+        badge: 'CRITICAL THREAT',
+        vulnerabilities: [
+          { type: 'Hardcoded Secret / API Token', line: 2, desc: 'Plain-text authorization credentials or private tokens are declared directly inside files, making them easily indexable by search crawlers.' }
+        ],
+        fixes: [
+          { issue: 'Hardcoded Credentials', fix: 'Remove plain-text credential tokens immediately and export parameters to secure system environment variables.' }
+        ],
+        summary: 'Critical leakage. Storing keys, databases credentials, or certificates directly in code commits leads to severe infrastructure hijacking and resource depletion.'
+      },
+      buffer: {
+        score: 42,
+        risk: 'high',
+        badge: 'HIGH RISK',
+        vulnerabilities: [
+          { type: 'Stack Buffer Overflow (Gets)', line: 6, desc: 'Use of standard unbounded console-read calls like gets() does not apply bounds protection, leaving standard registers exposed.' }
+        ],
+        fixes: [
+          { issue: 'Stack Overflow Exposure', fix: 'Migrate static bounded parameters to modern standard safe buffers like fgets() that validate character length inputs.' }
+        ],
+        summary: 'High risk buffer leak. Direct allocations without character boundary validation allow stack overflows and remote system code injection.'
+      },
+      generic: {
+        score: 95,
+        risk: 'low',
+        badge: 'SAFE',
+        vulnerabilities: [
+          { type: 'Minor Lint Warning: Missing Strict mode directive', line: 1, desc: 'Implicit globally declared variables might slip into scope without compiling checks.' }
+        ],
+        fixes: [
+          { issue: 'Missing Strict Directive', fix: 'Prepend standard "use strict" guidelines at the start of global files to validate scope.' }
+        ],
+        summary: 'Excellent security structure! Your parameters, access validation schemas, and cryptographic calls appear extremely secure and compliant.'
+      }
+    };
+
+    btnReview.addEventListener('click', () => {
+      const code = codeInput.value.trim();
+      if (!code) {
+        // Trigger subtle text wobble/flash on empty input
+        codeInput.style.borderColor = 'var(--danger)';
+        setTimeout(() => { codeInput.style.borderColor = 'var(--border)'; }, 500);
+        return;
+      }
+      
+      // Cache last code to local storage
+      localStorage.setItem('secureai_last_code', codeInput.value);
+
+      // 1. Show dynamic loader overlays
+      loadingOverlay.style.display = 'flex';
+      
+      // 2. Perform simulated heuristic scan
+      setTimeout(() => {
+        let matchKey = 'generic';
+        
+        // Scan for keyword matches
+        if (code.includes('SELECT') && (code.includes("'") || code.includes('+') || code.includes('user.id'))) {
+          matchKey = 'sql';
+        } else if (code.includes('innerHTML') || code.includes('document.write') || code.includes('eval(')) {
+          matchKey = 'xss';
+        } else if (code.includes('API_KEY') || code.includes('secret_token') || code.includes('super_secret_admin_token')) {
+          matchKey = 'secrets';
+        } else if (code.includes('gets(') || code.includes('strcpy') || code.includes('cin >>')) {
+          matchKey = 'buffer';
+        }
+
+        const report = HEURISTIC_DATABASE[matchKey];
+        renderAuditReport(report);
+        
+        // 3. Clear loaders and show dashboards
+        loadingOverlay.style.display = 'none';
+        resultsEmpty.style.display = 'none';
+        resultsDashboard.style.display = 'flex';
+        
+        // Smooth scroll to active dashboard results
+        document.getElementById('results-dashboard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 2000);
+    });
+
+    function renderAuditReport(report) {
+      // Reset radial score circle
+      scoreRadial.style.strokeDashoffset = 377; // Total Circumference
+      scoreValText.innerText = '0';
+      
+      // Set risk badges
+      riskBadge.className = `risk-badge ${report.risk}`;
+      riskBadge.innerHTML = `<i class="fa-solid fa-circle"></i> ${report.badge}`;
+      
+      // Dynamic score text coloring matching system accents
+      if (report.risk === 'critical') {
+        scoreRadial.style.stroke = 'var(--danger)';
+        scoreValText.style.color = 'var(--danger)';
+      } else if (report.risk === 'high') {
+        scoreRadial.style.stroke = 'var(--secondary)';
+        scoreValText.style.color = 'var(--secondary)';
+      } else if (report.risk === 'medium') {
+        scoreRadial.style.stroke = 'var(--warning)';
+        scoreValText.style.color = 'var(--warning)';
+      } else {
+        scoreRadial.style.stroke = 'var(--primary)';
+        scoreValText.style.color = 'var(--primary)';
+      }
+
+      // Animate score number counters
+      let currentVal = 0;
+      const targetVal = report.score;
+      const countInterval = setInterval(() => {
+        if (currentVal >= targetVal) {
+          scoreValText.innerText = targetVal;
+          clearInterval(countInterval);
+        } else {
+          currentVal += 2;
+          scoreValText.innerText = currentVal;
+        }
+      }, 20);
+
+      // Animate circular progress strokes
+      const circumference = 377;
+      const strokeOffset = circumference - (targetVal / 100) * circumference;
+      setTimeout(() => {
+        scoreRadial.style.strokeDashoffset = strokeOffset;
+      }, 100);
+
+      // Render summary typing out
+      summaryTypewriter.innerHTML = '';
+      let charIndex = 0;
+      function typeSummary() {
+        if (charIndex < report.summary.length) {
+          summaryTypewriter.innerHTML += report.summary.charAt(charIndex);
+          charIndex++;
+          setTimeout(typeSummary, 12);
+        }
+      }
+      setTimeout(typeSummary, 300);
+
+      // Render Vulnerability List with cascades
+      vulnsContainer.innerHTML = '';
+      report.vulnerabilities.forEach((v, index) => {
+        const item = document.createElement('div');
+        item.className = 'audit-item';
+        item.innerHTML = `
+          <i class="fa-solid fa-triangle-exclamation audit-icon"></i>
+          <div class="audit-info">
+            <div class="audit-header">
+              <span class="audit-type">${v.type}</span>
+              <span class="audit-line">Line ${v.line}</span>
+            </div>
+            <span class="audit-desc">${v.desc}</span>
+          </div>
+        `;
+        vulnsContainer.appendChild(item);
+        
+        setTimeout(() => {
+          item.classList.add('active');
+        }, 150 * (index + 1));
+      });
+
+      // Render Recommended Fixes List with cascades
+      fixesContainer.innerHTML = '';
+      report.fixes.forEach((f, index) => {
+        const item = document.createElement('div');
+        item.className = 'audit-item fix-item';
+        item.innerHTML = `
+          <i class="fa-solid fa-shield-halved audit-icon"></i>
+          <div class="audit-info">
+            <div class="audit-header">
+              <span class="audit-type">Fix: ${f.issue}</span>
+            </div>
+            <span class="audit-desc">${f.fix}</span>
+          </div>
+        `;
+        fixesContainer.appendChild(item);
+        
+        setTimeout(() => {
+          item.classList.add('active');
+        }, 150 * (index + 1));
+      });
+      
+      // Bind newly appended cards to the hover cursor
+      bindCursorHovers();
+    }
+
+
+    /* ==========================================
+       H. EXTRA UTILITY FUNCTIONALITIES (PDF, Share)
+       ========================================== */
+    // Download report (triggers clean browser print styles)
+    document.getElementById('btn-download').addEventListener('click', () => {
+      window.print();
+    });
+
+    // Share results via URI Hash encoding
+    document.getElementById('btn-share').addEventListener('click', () => {
+      const code = codeInput.value;
+      if (!code) return;
+      
+      // Compress/Encode code text into browser hash parameter
+      const encoded = btoa(encodeURIComponent(code));
+      const shareUrl = `${window.location.origin}${window.location.pathname}#code=${encoded}`;
+      
+      // Copy to clipboard
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        // Custom micro toast trigger
+        const origText = document.getElementById('btn-share').querySelector('span').innerHTML;
+        document.getElementById('btn-share').querySelector('span').innerHTML = '<i class="fa-solid fa-check"></i> Link Copied!';
+        setTimeout(() => {
+          document.getElementById('btn-share').querySelector('span').innerHTML = origText;
+        }, 2000);
+      });
+    });
+
+    // Decode URL share hash parameters on load
+    window.addEventListener('load', () => {
+      const hash = window.location.hash;
+      if (hash && hash.startsWith('#code=')) {
+        try {
+          const encoded = hash.split('#code=')[1];
+          const decoded = decodeURIComponent(atob(encoded));
+          codeInput.value = decoded;
+          updateEditor();
+          
+          // Auto scroll to editor tool
+          setTimeout(() => {
+            document.getElementById('tool').scrollIntoView({ behavior: 'smooth' });
+          }, 600);
+        } catch (e) {
+          console.error("Failed to decode share parameters:", e);
+        }
+      }
+    });
+
+
+    /* ==========================================
+       I. SVGS SCROLL DRAW CONNECTOR & DRAG SCROLLS
+       ========================================== */
+    // Dynamic SVG dash-offset line fill calculations
+    window.addEventListener('scroll', () => {
+      const container = document.querySelector('.how-it-works-section');
+      if (!container) return;
+      
+      const rect = container.getBoundingClientRect();
+      const viewHeight = window.innerHeight;
+      
+      // Calculate scroll progress percent inside this container bounds
+      const progress = Math.max(0, Math.min(1, (viewHeight - rect.top) / (rect.height + viewHeight * 0.4)));
+      const path = document.getElementById('connector-line-fill');
+      
+      if (path) {
+        // Animate stroke offset based on percentage scroll progress
+        const offset = 1000 - (progress * 1000);
+        path.style.strokeDashoffset = offset;
+      }
+    });
+
+    // Mouse Drag Horizontal Scroll
+    const dragScroll = document.getElementById('demo-drag-scroll');
+    let isDown = false;
+    let startX;
+    let scrollLeft;
+
+    dragScroll.addEventListener('mousedown', (e) => {
+      isDown = true;
+      dragScroll.classList.add('active');
+      startX = e.pageX - dragScroll.offsetLeft;
+      scrollLeft = dragScroll.scrollLeft;
+    });
+
+    dragScroll.addEventListener('mouseleave', () => {
+      isDown = false;
+      dragScroll.classList.remove('active');
+    });
+
+    dragScroll.addEventListener('mouseup', () => {
+      isDown = false;
+      dragScroll.classList.remove('active');
+    });
+
+    dragScroll.addEventListener('mousemove', (e) => {
+      if(!isDown) return;
+      e.preventDefault();
+      const x = e.pageX - dragScroll.offsetLeft;
+      const walk = (x - startX) * 1.5; // Scroll speed multiplier
+      dragScroll.scrollLeft = scrollLeft - walk;
+    });
+
+
+    /* ==========================================
+       J. TESTIMONIAL CAROUSEL
+       ========================================== */
+    const slides = document.querySelectorAll('.testimonial-slide');
+    const dots = document.querySelectorAll('.carousel-dot');
+    let currentSlide = 0;
+    let slideTimer;
+
+    function showSlide(index) {
+      slides.forEach(s => s.classList.remove('active'));
+      dots.forEach(d => d.classList.remove('active'));
+      
+      slides[index].classList.add('active');
+      dots[index].classList.add('active');
+      currentSlide = index;
+    }
+
+    function nextSlide() {
+      const next = (currentSlide + 1) % slides.length;
+      showSlide(next);
+    }
+
+    function resetSlideTimer() {
+      clearInterval(slideTimer);
+      slideTimer = setInterval(nextSlide, 6500); // 6.5s auto transition
+    }
+
+    dots.forEach(dot => {
+      dot.addEventListener('click', () => {
+        const slideIndex = parseInt(dot.getAttribute('data-slide'));
+        showSlide(slideIndex);
+        resetSlideTimer();
+      });
+    });
+
+    resetSlideTimer();
+
+
+    /* ==========================================
+       K. FAQ ACCORDION ENGINE
+       ========================================== */
+    const faqItems = document.querySelectorAll('.faq-item');
+    faqItems.forEach(item => {
+      const trigger = item.querySelector('.faq-trigger');
+      const content = item.querySelector('.faq-content');
+      
+      trigger.addEventListener('click', () => {
+        const isActive = item.classList.contains('active');
+        
+        // Collapse all active FAQ accordion sheets
+        faqItems.forEach(i => {
+          i.classList.remove('active');
+          i.querySelector('.faq-content').style.maxHeight = '0';
+        });
+        
+        // Open targets
+        if (!isActive) {
+          item.classList.add('active');
+          content.style.maxHeight = content.scrollHeight + 'px';
+        }
+      });
+    });
+
+
+    /* ==========================================
+       L. CONTACT FORM SUBMIT ANIMATION
+       ========================================== */
+    const contactForm = document.getElementById('contact-form');
+    const successCheck = document.getElementById('form-success-check');
+
+    contactForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      const submitBtn = contactForm.querySelector('button[type="submit"]');
+      const origText = submitBtn.querySelector('span').innerText;
+      
+      submitBtn.querySelector('span').innerText = 'SENDING...';
+      
+      // Simulate endpoint request
+      setTimeout(() => {
+        submitBtn.style.background = 'var(--border)';
+        submitBtn.style.color = 'var(--text-secondary)';
+        submitBtn.querySelector('span').innerText = 'SENT SUCCESSFULLY';
+        submitBtn.disabled = true;
+        
+        // Animate beautiful checkmark
+        successCheck.style.display = 'block';
+        
+        // Reset form inputs after timeout
+        setTimeout(() => {
+          contactForm.reset();
+          successCheck.style.display = 'none';
+          submitBtn.style.background = 'var(--primary)';
+          submitBtn.style.color = '#000';
+          submitBtn.querySelector('span').innerText = origText;
+          submitBtn.disabled = false;
+        }, 5000);
+      }, 1500);
+    });
+
+
+    /* ==========================================
+       M. DYNAMIC FLOATING PARTICLES CANVAS
+       ========================================== */
+    const canvas = document.getElementById('hero-particles');
+    const ctx = canvas.getContext('2d');
+    let particlesArray = [];
+    
+    // Resize observer for full banner dimensions
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    const codeSymbols = ['{', '}', '[', ']', '&&', '||', 'const', 'var', 'let', 'if', 'else', '===', 'func', 'void', 'null', '0x1A', 'shield', 'secure'];
+
+    class Particle {
+      constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.size = Math.random() * 2 + 1;
+        this.speedX = Math.random() * 0.4 - 0.2;
+        this.speedY = Math.random() * 0.4 - 0.2;
+        this.symbol = Math.random() < 0.15 ? codeSymbols[Math.floor(Math.random() * codeSymbols.length)] : null;
+        this.opacity = Math.random() * 0.5 + 0.1;
+      }
+      
+      update() {
+        this.x += this.speedX;
+        this.y += this.speedY;
+        
+        // Keep particles confined within window dimensions
+        if (this.x < 0 || this.x > canvas.width) this.speedX = -this.speedX;
+        if (this.y < 0 || this.y > canvas.height) this.speedY = -this.speedY;
+      }
+      
+      draw() {
+        ctx.fillStyle = `rgba(0, 255, 136, ${this.opacity})`;
+        ctx.strokeStyle = `rgba(255, 69, 0, ${this.opacity * 0.5})`;
+        
+        if (this.symbol) {
+          ctx.font = '10px JetBrains Mono';
+          ctx.fillText(this.symbol, this.x, this.y);
+        } else {
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+
+    function initParticles() {
+      const count = Math.min(60, Math.floor(window.innerWidth / 20));
+      particlesArray = [];
+      for (let i = 0; i < count; i++) {
+        particlesArray.push(new Particle());
+      }
+    }
+    initParticles();
+    window.addEventListener('resize', initParticles);
+
+    function animateParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      particlesArray.forEach(p => {
+        p.update();
+        p.draw();
+      });
+      
+      // Connect nearby particles with thin lines
+      for (let i = 0; i < particlesArray.length; i++) {
+        for (let j = i; j < particlesArray.length; j++) {
+          const dx = particlesArray[i].x - particlesArray[j].x;
+          const dy = particlesArray[i].y - particlesArray[j].y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          
+          if (distance < 120) {
+            ctx.beginPath();
+            ctx.strokeStyle = `rgba(0, 255, 136, ${0.1 * (1 - distance/120)})`;
+            ctx.lineWidth = 0.5;
+            ctx.moveTo(particlesArray[i].x, particlesArray[i].y);
+            ctx.lineTo(particlesArray[j].x, particlesArray[j].y);
+            ctx.stroke();
+          }
+        }
+      }
+      
+      requestAnimationFrame(animateParticles);
+    }
+    animateParticles();
+  </script>
+</body>
+</html>
